@@ -3,7 +3,7 @@
 ## Assumptions
 
 1. **CSV as primary data store** — Google Sheets is optional. The app must work offline with just CSV files. This removes hard dependencies on external APIs for the prototype.
-2. **Rule-based agent (no LLM)** — We use keyword/regex intent parsing instead of an LLM. This makes the system deterministic, fast, free to run, and deployable without API keys. For a production system, an LLM layer can be added on top.
+2. **Hybrid Agent (Rule-based + LLM)** — Primary intents are handled deterministically (regex/keyword). Unrecognized queries fall back to **Google Gemini 1.5 Flash** for natural language understanding. This combines reliability with flexibility.
 3. **Location matching is binary** — A pilot in "Bangalore" matches a "Bangalore" mission with 100%, and 0% for any other city. Travel distance or relocation costs are not modeled.
 4. **Skills and certifications are exact-match** — "Mapping" matches "Mapping" but not "Advanced Mapping". Fuzzy matching can be added later.
 5. **Single pilot + single drone per mission** — The prototype does not support multi-pilot or multi-drone missions.

@@ -112,6 +112,15 @@ def detect_intent(message: str) -> Tuple[str, Dict]:
     msg = message.lower().strip()
     params: Dict = {"raw": message}
 
+    # ── General question? Route to LLM (skip keyword matching) ──
+    _question_starters = (
+        "what ", "how ", "why ", "when ", "should ", "can ", "could ",
+        "would ", "is it ", "are there ", "do i ", "tell me ", "explain ",
+        "suggest ", "advise ", "describe ", "which ",
+    )
+    if msg.endswith("?") or msg.startswith(_question_starters):
+        return Intent.UNKNOWN, params
+
     # ── Cancel / unassign mission ──
     if any(kw in msg for kw in ["cancel mission", "cancel assignment", "unassign mission", "remove assignment", "clear assignment", "abort mission"]):
         mid = _extract_id(msg, prefix=["prj", "m", "mission"])
@@ -140,11 +149,15 @@ def detect_intent(message: str) -> Tuple[str, Dict]:
         return Intent.URGENT_REASSIGN, params
 
     # ── Conflict check ──
-    if any(kw in msg for kw in ["conflict", "overlap", "double book", "mismatch", "issue"]):
+    # Strict matching to avoid "conflicting" or "issues" in general conversation
+    conflict_kws = [r"conflict", r"overlap", r"double book", r"mismatch", r"issue"]
+    if any(re.search(rf"\b{kw}", msg) for kw in conflict_kws):
         return Intent.CONFLICTS, params
 
     # ── Assignment ──
-    if any(kw in msg for kw in ["assign", "match", "best pilot", "best drone", "recommend"]):
+    # Strict matching to avoid "assigning", "assignment" in conversation
+    assign_kws = [r"assign\b", r"match\b", r"recommend\b", r"best pilot", r"best drone"]
+    if any(re.search(rf"\b{kw}", msg) for kw in assign_kws):
         mid = _extract_id(msg, prefix=["prj", "m", "mission"])
         params["mission_id"] = mid
         return Intent.ASSIGN, params
@@ -534,6 +547,23 @@ def _handle_help(params: Dict, store: DataStore) -> str:
 
 
 def _handle_unknown(params: Dict, store: DataStore) -> str:
+    # Try LLM for an intelligent response
+    from services.llm_service import ask_llm
+
+    context = (
+        f"Pilots: {len(store.pilots)} total "
+        f"({sum(1 for p in store.pilots if p.status == 'Available')} available). "
+        f"Drones: {len(store.drones)} total "
+        f"({sum(1 for d in store.drones if d.status == 'Available')} available). "
+        f"Missions: {len(store.missions)} total "
+        f"({sum(1 for m in store.missions if m.priority == 'Urgent')} urgent)."
+    )
+
+    llm_response = ask_llm(params.get("raw", ""), context)
+    if llm_response:
+        return llm_response
+
+    # Fallback if LLM is not available
     return (
         "I'm not sure what you're asking. Try one of these:\n"
         "- `Show available pilots`\n"
