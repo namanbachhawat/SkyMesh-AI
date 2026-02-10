@@ -13,7 +13,7 @@
 
 | Decision | Chose | Alternative | Reason |
 |---|---|---|---|
-| Agent type | Rule-based keyword matching | LangChain + OpenAI | Zero API cost, deterministic, works offline. Can upgrade later. |
+| Agent type | Hybrid (Rule-based + LLM) | Pure Rule-based | Combines deterministic control for commands with LLM flexibility for questions. |
 | Data layer | CSV files + optional Sheets | SQLite / PostgreSQL | Simpler deployment, matches Google Sheets mirroring requirement. |
 | UI framework | Streamlit | Flask + React | One-file deployment, built-in chat and tables, Streamlit Cloud hosting. |
 | Scoring model | Weighted linear composite | ML ranking model | Transparent, auditable, easy to tune weights. ML is overkill for 4 pilots. |
@@ -43,9 +43,8 @@ The reassignment engine follows a **2-phase approach**:
 
 ## If Had More Time
 
-1. **LLM-powered conversational layer** — Use Gemini or GPT-4 for more natural language understanding and multi-turn conversations.
-2. **Map visualization** — Show pilot/drone/mission locations on an interactive map (Folium or Deck.gl).
-3. **Automated scheduling optimizer** — Use constraint satisfaction (OR-Tools) to auto-schedule all missions optimally.
+1. **Map visualization** — Show pilot/drone/mission locations on an interactive map (Folium or Deck.gl).
+2. **Automated scheduling optimizer** — Use constraint satisfaction (OR-Tools) to auto-schedule all missions optimally.
 4. **Notification system** — Email/Slack alerts when conflicts are detected or urgent missions arrive.
 5. **Role-based access** — Admin vs. dispatcher vs. read-only roles.
 6. **Historical analytics** — Mission completion rates, pilot utilization, drone flight hours dashboard.
